@@ -663,6 +663,31 @@ html[data-theme=dark] .cv-fit img{filter:drop-shadow(0 18px 22px rgba(0,0,0,.5))
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
+/* ===== first screen: just the car ===== */
+.h1car{height:calc(100svh - var(--navh));min-height:380px;display:grid;place-items:center;padding:0 2vw;overflow:hidden}
+.h1car a{display:block;width:min(97vw,calc((100svh - var(--navh)) * .9 * 2.709));max-width:1900px}
+.h1car img{display:block;width:100%;height:auto;filter:drop-shadow(0 30px 34px rgba(0,0,0,.17))}
+html[data-theme=dark] .h1car img{filter:drop-shadow(0 30px 36px rgba(0,0,0,.6))}
+.h1car a:focus-visible{outline-offset:8px}
+.hx{border-top:1px solid var(--line)}
+@media (max-aspect-ratio:1/1){.h1car{height:calc(100svh - var(--navh));padding:0}.h1car a{width:100vw}}
+
+/* ===== assistant launcher: collapsed by default ===== */
+#asstBtn{width:52px;height:52px;padding:0 16px;border-radius:26px;gap:0;justify-content:flex-start;overflow:hidden;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.18);transition:width .35s var(--ease),transform .35s var(--ease),opacity .3s}
+#asstBtn svg{width:20px;height:20px;flex:none}
+#asstBtn .i-x{display:none}
+#asstBtn[aria-expanded=true] .i-chat{display:none}
+#asstBtn[aria-expanded=true] .i-x{display:block}
+#asstBtn .al{opacity:0;margin-left:10px;transition:opacity .2s}
+#asstBtn:hover:not([aria-expanded=true]),#asstBtn:focus-visible:not([aria-expanded=true]){width:148px}
+#asstBtn:hover .al,#asstBtn:focus-visible .al{opacity:1}
+#asstBtn[aria-expanded=true] .al{opacity:0}
+#asstBtn.tuck{transform:translateY(90px);opacity:0;pointer-events:none}
+#asstBtn:hover{transform:none}
+#asst{border-radius:4px}
+@media (hover:none){#asstBtn:hover{width:52px}#asstBtn .al{display:none}}
+@media (max-width:720px){#asstBtn{width:48px;height:48px;padding:0 14px}}
+
 </style>
 </head>
 <body>
@@ -711,7 +736,10 @@ html[data-theme=dark] .cv-fit img{filter:drop-shadow(0 18px 22px rgba(0,0,0,.5))
 
 <!-- ============ HOME ============ -->
 <div data-page="home" class="page">
-  <section class="hx" aria-label="Featured model">
+  <section class="h1car" id="heroFull" aria-label="Deepal E07">
+    <a href="#/models/e07" aria-label="Open the Deepal E07"><img data-img="c_e07_0" alt="Deepal E07 in Hematite Grey" draggable="false" fetchpriority="high"></a>
+  </section>
+  <section class="hx" aria-label="Choose a model">
     <div class="hx-head">
       <div><span class="mono hx-eye">Deepal &amp; NEVO by CHANGAN &middot; Kathmandu, Nepal</span><h1 class="disp">Nepal&rsquo;s No.1<br>luxury EV brand</h1></div>
       <div class="hx-cta"><a class="btn solid" href="#/test-drive" id="heroTd">Book a test drive <span class="arr"></span></a><a class="btn ghost" href="#/models">All models</a></div>
@@ -1074,7 +1102,7 @@ html[data-theme=dark] .cv-fit img{filter:drop-shadow(0 18px 22px rgba(0,0,0,.5))
   <div class="base mono"><span>&copy; <span id="yr">2026</span> CHANGAN by MAW Vriddhi Autocorp. Tripureshwor, Kathmandu.</span><span>Made by <a href="https://bishowdeep.pages.dev" target="_blank" rel="noopener">Bishowdeep Bhusal</a></span><a href="#/privacy">Privacy and legal</a></div>
 </footer>
 
-<button id="asstBtn" aria-controls="asst" aria-expanded="false"><span class="dot"></span><span>Ask</span><span class="lbl2">&nbsp;Deepal assistant</span></button>
+<button id="asstBtn" aria-controls="asst" aria-expanded="false" aria-label="Ask the Deepal assistant"><svg class="i-chat" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3.5 4.5h13v9h-7l-4 3v-3h-2z"/></svg><svg class="i-x" viewBox="0 0 20 20" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg><span class="al">Ask Deepal</span></button>
 <section id="asst" role="dialog" aria-label="Deepal assistant">
   <header><div><b>Deepal assistant</b><span class="mono">Answers from this site &middot; runs in your browser</span></div><button class="ico" id="asstX" aria-label="Close assistant"><svg viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.3"><path d="M3 3l10 10M13 3L3 13"/></svg></button></header>
   <div class="log" id="asstLog" aria-live="polite"></div>
@@ -1309,7 +1337,7 @@ function heroSet(id, ci = 0) {
 }
 $('#heroTabs').addEventListener('click', e => { const b = e.target.closest('[data-hid]'); if (b) heroSet(b.dataset.hid); });
 $('#heroSw').addEventListener('click', e => { const b = e.target.closest('[data-ci]'); if (b) heroSet(heroCar.id, +b.dataset.ci); });
-heroSet(CARS[0].id);
+heroSet('l07');
 
 /* ================= MODELS PAGE ================= */
 $('#mgrid').innerHTML = CARS.map(banner).join('');
@@ -1575,15 +1603,29 @@ document.addEventListener('click', e => {
 /* ================= ASSISTANT ================= */
 const log = $('#asstLog'), box = $('#asst'), aBtn = $('#asstBtn'), aIn = $('#asstIn');
 let lastCar = null, greeted = false;
-function openAsst(o = true) {
+let openAsst = function (o = true) {
   box.classList.toggle('open', o); aBtn.setAttribute('aria-expanded', o);
   if (o && !greeted) { greeted = true; bot(`Namaste. I can answer questions about the Deepal and NEVO range from this site: prices, range, charging, EMI, test drives and how to reach us.`, [], true); }
   if (o) window.setTimeout(() => aIn.focus(), 250);
-}
+};
 aBtn.addEventListener('click', () => openAsst(!box.classList.contains('open')));
 $('#asstX').addEventListener('click', () => openAsst(false));
 document.addEventListener('click', e => { if (e.target.closest('[data-open-asst]')) openAsst(true); });
 window.addEventListener('keydown', e => { if (e.key === 'Escape') openAsst(false); });
+/* auto-collapse: closes on outside tap, page change, scrolling on, or 60 s idle */
+let asstY = 0, asstIdle = 0;
+const asstOpen = () => box.classList.contains('open');
+function asstTouch() { clearTimeout(asstIdle); if (asstOpen()) asstIdle = window.setTimeout(() => openAsst(false), 60000); }
+const _openAsst = openAsst;
+openAsst = function (o = true) { _openAsst(o); if (o) { asstY = window.scrollY; aBtn.classList.remove('tuck'); asstTouch(); } else clearTimeout(asstIdle); };
+document.addEventListener('pointerdown', e => { if (asstOpen() && !e.target.closest('#asst,#asstBtn,[data-open-asst]')) openAsst(false); });
+window.addEventListener('scroll', () => { if (asstOpen() && Math.abs(window.scrollY - asstY) > 280) openAsst(false); }, { passive: true });
+['pointerdown', 'keydown', 'input'].forEach(t => box.addEventListener(t, asstTouch));
+window.addEventListener('app:route', () => { if (asstOpen()) openAsst(false); tuckCheck(); });
+// keep the first screen clear: launcher tucks away while the hero car fills the view
+let heroVis = false;
+function tuckCheck() { aBtn.classList.toggle('tuck', APP.state.page === 'home' && heroVis && !asstOpen()); }
+if ('IntersectionObserver' in window) new IntersectionObserver(es => { heroVis = es[0].intersectionRatio > 0.55; tuckCheck(); }, { threshold: [0, 0.55, 1] }).observe($('#heroFull'));
 function add(cls, h) { const d = document.createElement('div'); d.className = 'msg ' + cls; d.innerHTML = h; log.appendChild(d); log.scrollTop = log.scrollHeight; return d; }
 function bot(h, links = [], instant) {
   const draw = () => { const d = add('bot', h + (links.length ? `<div class="links">${links.map(l => l.href ? `<a href="${l.href}">${esc(l.t)}</a>` : `<button data-q="${esc(l.q)}">${esc(l.t)}</button>`).join('')}</div>` : '')); };
